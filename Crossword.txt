@@ -1,0 +1,115 @@
+import tkinter as tk
+from tkinter import messagebox
+
+class SimpleCrossword:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Python Crossword Puzzle")
+        
+        # Crossword grid (5x5) with pre-filled letters and empty cells ("")
+        self.solution = [
+            ['C', 'A', 'T', '', 'D'],
+            ['', '', 'A', '', 'O'],
+            ['', '', 'R', '', 'G'],
+            ['', 'D', 'O', 'G', ''],
+            ['', '', '', '', '']
+        ]
+        
+        # Clues for the puzzle
+        self.clues = {
+            "Across": {
+                1: "A furry pet (3 letters)",
+                4: "Man's best friend (3 letters)"
+            },
+            "Down": {
+                1: "A programming language (3 letters)",
+                2: "Opposite of up (4 letters)"
+            }
+        }
+        
+        # Track user's entries
+        self.user_answers = [row.copy() for row in self.solution]
+        
+        # Create the GUI
+        self.create_widgets()
+    
+    def create_widgets(self):
+        # Create crossword grid
+        self.cells = []
+        for i in range(5):
+            row = []
+            for j in range(5):
+                if self.solution[i][j]:  # Pre-filled letter
+                    label = tk.Label(
+                        self.root, 
+                        text=self.solution[i][j], 
+                        width=4, 
+                        height=2, 
+                        relief="solid", 
+                        bg="lightgray"
+                    )
+                    label.grid(row=i, column=j)
+                else:  # Empty cell (user can type here)
+                    entry = tk.Entry(
+                        self.root, 
+                        width=4, 
+                        font=("Arial", 14), 
+                        justify="center",
+                        relief="solid"
+                    )
+                    entry.grid(row=i, column=j)
+                    entry.bind("<FocusOut>", lambda e, i=i, j=j: self.update_answer(i, j))
+                row.append(label if self.solution[i][j] else entry)
+            self.cells.append(row)
+        
+        # Create clues section
+        clues_frame = tk.Frame(self.root)
+        clues_frame.grid(row=0, column=6, rowspan=5, sticky="n", padx=20)
+        
+        tk.Label(clues_frame, text="ACROSS", font=("Arial", 12, "bold")).pack(anchor="w")
+        for num, clue in self.clues["Across"].items():
+            tk.Label(clues_frame, text=f"{num}. {clue}", anchor="w").pack(fill="x")
+        
+        tk.Label(clues_frame, text="\nDOWN", font=("Arial", 12, "bold")).pack(anchor="w")
+        for num, clue in self.clues["Down"].items():
+            tk.Label(clues_frame, text=f"{num}. {clue}", anchor="w").pack(fill="x")
+        
+        # Check answers button
+        tk.Button(
+            self.root, 
+            text="Check Answers", 
+            command=self.check_answers,
+            font=("Arial", 12),
+            bg="lightblue"
+        ).grid(row=6, column=0, columnspan=5, pady=10)
+    
+    def update_answer(self, row, col):
+        """Update user's answer when they type in a cell"""
+        if isinstance(self.cells[row][col], tk.Entry):
+            self.user_answers[row][col] = self.cells[row][col].get().upper()
+    
+    def check_answers(self):
+        """Check if user's answers match the solution"""
+        all_correct = True
+        for i in range(5):
+            for j in range(5):
+                if not self.solution[i][j]:  # Only check empty cells
+                    user_input = self.user_answers[i][j]
+                    correct_answer = self.solution[i][j]
+                    
+                    if isinstance(self.cells[i][j], tk.Entry):
+                        if user_input == correct_answer:
+                            self.cells[i][j].config(bg="lightgreen")
+                        else:
+                            self.cells[i][j].config(bg="salmon")
+                            all_correct = False
+        
+        if all_correct:
+            messagebox.showinfo("Congratulations!", "All answers are correct!")
+        else:
+            messagebox.showwarning("Keep Trying", "Some answers are incorrect.")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    game = SimpleCrossword(root)
+    root.mainloop()
